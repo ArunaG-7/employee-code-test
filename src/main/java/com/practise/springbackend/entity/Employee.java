@@ -1,8 +1,11 @@
 package com.practise.springbackend.entity;
 
+import com.sun.istack.NotNull;
 import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,22 +23,31 @@ public class Employee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String employeeId;
 
+
     @Column(name = "first_name")
+    @NotBlank
     private String firstName;
 
     @Column(name = "last_name")
+    @NotBlank
     private String lastName;
 
     @Column(name = "email")
+    @Email
     private String email;
 
     @ElementCollection
-    private List<String> phoneNumber;
+    @NotEmpty
+    @Valid
+    private List<@NotBlank @Pattern(regexp = "\\d{10}")String> phoneNumber;
 
     @Column(name = "doj")
+    @NotNull
     private LocalDate doj;
 
     @Column(name = "salary")
-    private double salary;
+    @NotNull
+    @Positive
+    private Double salary;
 
 }

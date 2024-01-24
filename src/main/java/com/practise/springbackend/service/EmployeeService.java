@@ -20,7 +20,7 @@ public class EmployeeService {
     public String addEmployee(Employee emp){
 
         try {
-            validateEmployee(emp);  // this validateEmployee method checks where all the mandatory fields are mentioned
+            validateEmployee(emp);  // this validate Employee method checks where all the mandatory fields are mentioned
             employeeRepo.save(emp);
             return "Employee details added successfully";
         }
@@ -30,23 +30,23 @@ public class EmployeeService {
     }
 
     private void validateEmployee(Employee employee){
-        if(employee == null || !isValidEmployeeData(employee)) {
+        if(employee == null) {
             throw new InvalidEmployeeDataException("Invalid employee data ");
         }
     }
 
-    private boolean isValidEmployeeData(Employee employee){
-        if(employee.getEmployeeId() == null ||
-           employee.getFirstName() == null ||
-           employee.getLastName() == null ||
-           employee.getEmail() == null ||
-           employee.getDoj() == null ||
-           employee.getPhoneNumber() == null ||
-           employee.getSalary()<=0) {
-            throw new InvalidEmployeeDataException("Some of the employee data missing or invalid");
-        }
-        return true;
-    }
+//    private boolean isValidEmployeeData(Employee employee){
+//        if(employee.getEmployeeId() == null ||
+//           employee.getFirstName() == null ||
+//           employee.getLastName() == null ||
+//           employee.getEmail() == null ||
+//           employee.getDoj() == null ||
+//           employee.getPhoneNumber() == null ||
+//           employee.getSalary()<=0) {
+//            throw new InvalidEmployeeDataException("Some of the employee data missing or invalid");
+//        }
+//        return true;
+//    }
 
     public List<EmployeeTaxInfo> calculateTaxDeductionForCurrentYear() {
         List<Employee> employees = employeeRepo.findAll();
@@ -60,24 +60,32 @@ public class EmployeeService {
     }
 
     private EmployeeTaxInfo calculateTaxInfo(Employee employee){
-        double totalSalary = calculateTotalSalary(employee);
-        double taxAmount = calculateTaxAmount(totalSalary);
-        double cessAmount = calculateCessAmount(totalSalary);
+        double yearlySalary = calculateYearlySalary(employee);
+        double taxAmount = calculateTaxAmount(yearlySalary);
+        double cessAmount = calculateCessAmount(yearlySalary);
         return new EmployeeTaxInfo(employee.getEmployeeId(),
                                    employee.getFirstName(),
                                    employee.getLastName(),
-                                   totalSalary,
+                                   yearlySalary,
                                    taxAmount,
                                    cessAmount);
     }
 
 
-    private double calculateTotalSalary(Employee employee) {
-        LocalDate date = LocalDate.now();
-        int numOfMonths = 12 - employee.getDoj().getMonthValue() + (employee.getDoj().getYear() == date.getYear() ? 1 :0);
-        double lossOfPayPerDay = employee.getSalary() / 30;
-        double totalSalary = employee.getSalary() * numOfMonths;
-        return totalSalary;
+    private double calculateYearlySalary(Employee employee) {
+        LocalDate currentDate = LocalDate.now();
+        LocalDate joiningDate =employee.getDoj();
+
+        int monthsWorked = (int) (joiningDate.until(currentDate).toTotalMonths());
+
+        boolean excludeCurrentMonth = joiningDate.getMonthValue() == currentDate.getMonthValue()
+                                      && joiningDate.getYear() == currentDate.getYear(); // checking if the employee joined in the current month
+
+        int monthsToExclude = excludeCurrentMonth ? 0 : 12;
+        int numOfMonths = Math.max(0, monthsWorked - monthsToExclude);
+
+        double yearlySalary = employee.getSalary() * numOfMonths;
+        return yearlySalary;
     }
 
     private double calculateTaxAmount(double totalSalary){
@@ -100,5 +108,7 @@ public class EmployeeService {
         double cessAmount = Math.max(0, totalSalary-2500000);
         return 0.02 * cessAmount;
     }
+
+
 
 }
