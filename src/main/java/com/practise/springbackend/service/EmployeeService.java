@@ -78,10 +78,15 @@ public class EmployeeService {
 
         int monthsWorked = (int) (joiningDate.until(currentDate).toTotalMonths());
 
-        boolean excludeCurrentMonth = joiningDate.getMonthValue() == currentDate.getMonthValue()
-                                      && joiningDate.getYear() == currentDate.getYear(); // checking if the employee joined in the current month
-
-        int monthsToExclude = excludeCurrentMonth ? 0 : 12;
+        boolean isJoinedInCurrentFinancialYear = joiningDate.getMonthValue() >= 4
+                                      && joiningDate.getYear() == currentDate.getYear() - 1;
+        int monthsToExclude = 0;
+        if(isJoinedInCurrentFinancialYear){
+            monthsToExclude = joiningDate.getMonthValue() - 4;
+        }
+        else {
+            monthsToExclude = 12;
+        }
         int numOfMonths = Math.max(0, monthsWorked - monthsToExclude);
 
         double yearlySalary = employee.getSalary() * numOfMonths;
